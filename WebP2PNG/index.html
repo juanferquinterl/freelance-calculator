@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebP2PNG</title>
+<meta name="description" content="Convert WebP images to PNG directly in your browser. Free online image converter.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: 60px 20px 30px;
+}
+.card {
+  background: white;
+  padding: 35px;
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+}
+h1 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+input, button, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+button:hover {
+  background: #43a047;
+}
+.language {
+  text-align: right;
+  margin-bottom: 15px;
+}
+#downloadLink {
+  margin-top: 10px;
+  background: #2196F3;
+  padding: 12px;
+  border-radius: 6px;
+  color: white;
+  text-decoration: none;
+  display: none;
+}
+#toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s, transform 0.4s;
+}
+#toast.show {
+  opacity: 1;
+  transform: translate(-50%, -10px);
+}
+.footer {
+  margin-top: 40px;
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="language">
+    <select id="language" onchange="setLanguage()">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+    </select>
+  </div>
+
+  <h1 id="title">WebP2PNG</h1>
+
+  <label id="labelFile">Select WebP image</label>
+  <input type="file" id="webpFile" accept="image/webp">
+
+  <button id="convertButton" onclick="convertToPNG()">Convert to PNG</button>
+
+  <a id="downloadLink">Download PNG</a>
+</div>
+
+<div class="footer" id="footerText">Convert WebP images to PNG quickly in your browser</div>
+<div id="toast"></div>
+
+<script>
+let lang = "en";
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+function setLanguage() {
+  lang = document.getElementById("language").value;
+  localStorage.setItem("lang", lang);
+
+  if(lang === "es") {
+    document.getElementById("title").innerText = "WebP2PNG";
+    document.getElementById("labelFile").innerText = "Selecciona imagen WebP";
+    document.getElementById("convertButton").innerText = "Convertir a PNG";
+    document.getElementById("downloadLink").innerText = "Descargar PNG";
+    document.getElementById("footerText").innerText = "Convierte imágenes WebP a PNG rápidamente en tu navegador";
+  } else {
+    document.getElementById("title").innerText = "WebP2PNG";
+    document.getElementById("labelFile").innerText = "Select WebP image";
+    document.getElementById("convertButton").innerText = "Convert to PNG";
+    document.getElementById("downloadLink").innerText = "Download PNG";
+    document.getElementById("footerText").innerText = "Convert WebP images to PNG quickly in your browser";
+  }
+}
+
+function convertToPNG() {
+  const fileInput = document.getElementById("webpFile");
+  if(!fileInput.files.length) {
+    showToast(lang === "es" ? "Por favor selecciona una imagen" : "Please select an image");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob(function(blob) {
+        const url = URL.createObjectURL(blob);
+        const downloadLink = document.getElementById("downloadLink");
+        downloadLink.href = url;
+        downloadLink.download = "image.png";
+        downloadLink.style.display = "inline-block";
+        showToast(lang === "es" ? "Imagen lista para descargar" : "Image ready for download");
+      }, "image/png");
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+window.onload = () => {
+  const savedLang = localStorage.getItem("lang");
+  if(savedLang){
+    document.getElementById("language").value = savedLang;
+    setLanguage();
+  }
+};
+</script>
+
+</body>
+</html>
