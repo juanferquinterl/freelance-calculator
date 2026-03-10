@@ -125,10 +125,14 @@ function showToast(message){
   setTimeout(()=>{toast.style.display='none';},2500);
 }
 
+function parseItems(raw){
+  return raw.split(/\n|,/).map(i=>i.trim()).filter(i=>i);
+}
+
 function generateList(){
   const raw = itemsInput.value.trim();
   if(!raw){ showToast(translations[langSelect.value].invalid); return; }
-  const items = raw.split(/\n|,/).map(i=>i.trim()).filter(i=>i);
+  const items = parseItems(raw);
   const style = styleSelect.value;
   let listText = "";
   if(style==="bullet"){
@@ -148,13 +152,15 @@ function copyList(){
 function downloadPDF(){
   const raw = itemsInput.value.trim();
   if(!raw){ showToast(translations[langSelect.value].invalid); return; }
-  const items = raw.split(/\n|,/).map(i=>i.trim()).filter(i=>i);
-  const title = titleInput.value.trim() || translations[langSelect.value].title;
-  
+
+  const items = parseItems(raw);
+  const titleText = titleInput.value.trim() || translations[langSelect.value].title;
+  const style = styleSelect.value;
+
   const doc = new jsPDF();
   doc.setFontSize(22);
   doc.setTextColor(40,40,40);
-  doc.text(title,105,20,null,null,"center");
+  doc.text(titleText,105,20,null,null,"center");
 
   // línea debajo del título
   doc.setDrawColor(100,100,100);
@@ -163,18 +169,22 @@ function downloadPDF(){
 
   doc.setFontSize(14);
   let y = 40;
+
   items.forEach((item,index)=>{
-    if(y>280){ doc.addPage(); y=20; } 
-    if(index%2===0){ doc.setFillColor(245,245,245); doc.rect(10,y-6,190,10,'F'); }
-    doc.setDrawColor(0);
-    doc.circle(15, y, 3);
-    doc.text(item, 25, y+2);
+    if(y>280){ doc.addPage(); y=20; } // nueva página si es necesario
+    if(style==="bullet"){
+      doc.circle(15, y, 2.5); // viñeta
+      doc.text(item, 25, y+2);
+    } else {
+      doc.text(`${index+1}. ${item}`, 15, y+2);
+    }
     y+=10;
   });
 
-  doc.save(title+".pdf");
+  doc.save(titleText+".pdf");
 }
 
+// Eventos
 generateBtn.addEventListener('click', generateList);
 copyBtn.addEventListener('click', copyList);
 pdfBtn.addEventListener('click', downloadPDF);

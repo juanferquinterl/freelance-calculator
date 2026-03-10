@@ -1,100 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebP2PNG</title>
-<meta name="description" content="Convert WebP images to PNG directly in your browser. Free online image converter.">
+<title>WebP2PNG | My Web Tools</title>
+<meta name="description" content="Convert WebP images to PNG quickly in your browser. Free online converter.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 
 <style>
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f6f8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  margin: 0;
-  padding: 60px 20px 30px;
-}
-.card {
-  background: white;
-  padding: 35px;
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-  width: 400px;
-  max-width: 90%;
-  text-align: center;
-}
-h1 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-input, button, select {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-button:hover {
-  background: #43a047;
-}
-.language {
-  text-align: right;
-  margin-bottom: 15px;
-}
-#downloadLink {
-  margin-top: 10px;
-  background: #2196F3;
-  padding: 12px;
-  border-radius: 6px;
-  color: white;
-  text-decoration: none;
-  display: none;
-}
-#toast {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s, transform 0.4s;
-}
-#toast.show {
-  opacity: 1;
-  transform: translate(-50%, -10px);
-}
-.footer {
-  margin-top: 40px;
-  font-size: 12px;
-  color: #777;
-  text-align: center;
-}
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background:#f4f6f8; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:40px 20px; }
+.container { background:white; padding:40px 35px; border-radius:12px; box-shadow:0 15px 40px rgba(0,0,0,0.1); width:400px; max-width:100%; text-align:center; }
+h1 { margin-bottom:25px; color:#333; }
+input[type=file], button, select { width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+input[type=file]:focus, select:focus { outline:none; border-color:#4CAF50; box-shadow:0 0 5px rgba(76,175,80,0.3); }
+button { background:#4CAF50; color:white; border:none; cursor:pointer; font-weight:bold; margin-top:15px; transition:0.3s; }
+button:hover { background:#43a047; }
+#downloadLink { display:none; margin-top:10px; background:#2196F3; color:white; padding:12px; border-radius:8px; text-decoration:none; display:inline-block; transition:0.3s; }
+#downloadLink:hover { background:#1e88e5; }
+.language-select { text-align:right; margin-bottom:20px; }
+.footer { text-align:center; margin-top:25px; font-size:12px; color:#777; }
+#toast { position:fixed; bottom:25px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:opacity 0.4s, transform 0.4s; z-index:1000; }
+#toast.show { opacity:1; transform:translate(-50%,-10px); }
 </style>
 </head>
 
 <body>
-
-<div class="card">
-  <div class="language">
+<div class="container">
+  <div class="language-select">
     <select id="language" onchange="setLanguage()">
       <option value="en">English</option>
       <option value="es">Español</option>
@@ -109,9 +42,10 @@ button:hover {
   <button id="convertButton" onclick="convertToPNG()">Convert to PNG</button>
 
   <a id="downloadLink">Download PNG</a>
+
+  <div class="footer" id="footerText">Convert WebP images to PNG quickly in your browser</div>
 </div>
 
-<div class="footer" id="footerText">Convert WebP images to PNG quickly in your browser</div>
 <div id="toast"></div>
 
 <script>
@@ -127,8 +61,7 @@ function showToast(message) {
 function setLanguage() {
   lang = document.getElementById("language").value;
   localStorage.setItem("lang", lang);
-
-  if(lang === "es") {
+  if(lang==="es") {
     document.getElementById("title").innerText = "WebP2PNG";
     document.getElementById("labelFile").innerText = "Selecciona imagen WebP";
     document.getElementById("convertButton").innerText = "Convertir a PNG";
@@ -146,10 +79,9 @@ function setLanguage() {
 function convertToPNG() {
   const fileInput = document.getElementById("webpFile");
   if(!fileInput.files.length) {
-    showToast(lang === "es" ? "Por favor selecciona una imagen" : "Please select an image");
+    showToast(lang==="es"?"Por favor selecciona una imagen":"Please select an image");
     return;
   }
-
   const file = fileInput.files[0];
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -160,14 +92,13 @@ function convertToPNG() {
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
-
       canvas.toBlob(function(blob) {
         const url = URL.createObjectURL(blob);
         const downloadLink = document.getElementById("downloadLink");
         downloadLink.href = url;
         downloadLink.download = "image.png";
         downloadLink.style.display = "inline-block";
-        showToast(lang === "es" ? "Imagen lista para descargar" : "Image ready for download");
+        showToast(lang==="es"?"Imagen lista para descargar":"Image ready for download");
       }, "image/png");
     };
     img.src = e.target.result;
@@ -183,6 +114,5 @@ window.onload = () => {
   }
 };
 </script>
-
 </body>
 </html>

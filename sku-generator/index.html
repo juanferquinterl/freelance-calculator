@@ -1,187 +1,172 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SKU Generator | My Web Tools</title>
-  <style>
-    * { box-sizing: border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background:#f0f2f5; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
-    .container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; }
-    h1 { text-align:center; margin-bottom:20px; color:#333; }
-    label { display:block; margin-top:15px; font-weight:600; color:#555; }
-    input[type="text"], input[type="number"], select { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
-    .output { margin-top:20px; background:#f7f9fc; padding:15px; border-radius:8px; border:1px solid #e1e4eb; min-height:120px; white-space: pre-line; font-size:16px; color:#333; }
-    button { margin-top:15px; width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s ease; }
-    button:hover { background-color:#45a049; }
-    .button-group { display:flex; justify-content:space-between; }
-    .footer { text-align:center; margin-top:15px; font-size:14px; color:#777; }
-    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKU Generator | My Web Tools</title>
+<meta name="description" content="Generate sequential or random alphanumeric SKUs quickly. Free online SKU generator.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background:#f4f6f8; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:40px 20px; }
+.container { background:white; padding:40px 30px; border-radius:12px; box-shadow:0 15px 40px rgba(0,0,0,0.1); width:500px; max-width:100%; }
+h1 { text-align:center; margin-bottom:25px; color:#333; }
+label { display:block; margin-top:15px; font-weight:600; color:#555; }
+input[type=text], input[type=number], select { width:100%; padding:12px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
+.output { margin-top:20px; background:#f7f9fc; padding:15px; border-radius:8px; border:1px solid #e1e4eb; min-height:120px; white-space: pre-line; font-size:16px; color:#333; }
+.button-group { display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px; }
+button { flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s; }
+button:hover { background-color:#45a049; }
+.footer { text-align:center; margin-top:25px; font-size:12px; color:#777; }
+.language-select { text-align:right; margin-bottom:15px; }
+#toast { position: fixed; bottom: 25px; left: 50%; transform:translateX(-50%); background:#333; color:white; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:opacity 0.4s, transform 0.4s; z-index:1000; }
+#toast.show { opacity:1; transform:translate(-50%,-10px); }
+</style>
 </head>
-<body>
-  <div class="container">
-    <h1>SKU Generator</h1>
 
-    <label for="langSelect">Idioma / Language:</label>
-    <select id="langSelect">
+<body>
+<div class="container">
+  <div class="language-select">
+    <select id="langSelect" onchange="updateLanguage()">
       <option value="es">Español</option>
       <option value="en">English</option>
     </select>
-
-    <label for="prefix" id="prefixLabel">Prefijo del código:</label>
-    <input type="text" id="prefix" placeholder="Ej: PROD">
-
-    <label for="quantity" id="quantityLabel">Cantidad de códigos:</label>
-    <input type="number" id="quantity" placeholder="Ej: 10" min="1">
-
-    <label for="numberLength" id="numberLengthLabel">Longitud del número (sec. numérica):</label>
-    <input type="number" id="numberLength" value="3" min="1" max="10">
-
-    <label for="format" id="formatLabel">Formato de código:</label>
-    <select id="format">
-      <option value="numeric">Secuencial (001, 002...)</option>
-      <option value="alphanumeric">Aleatorio alfanumérico</option>
-    </select>
-
-    <div class="output" id="output">Aquí aparecerán los códigos generados</div>
-
-    <div class="button-group">
-      <button id="generateBtn">Generar códigos</button>
-      <button id="copyBtn">Copiar</button>
-      <button id="downloadBtn">Descargar CSV</button>
-    </div>
-
-    <div class="footer">&copy; 2026 JuanFerQuinterl | Free web tools</div>
   </div>
 
-  <div id="toast"></div>
+  <h1 id="title">SKU Generator</h1>
 
-  <script>
-    const langSelect = document.getElementById('langSelect');
-    const prefixInput = document.getElementById('prefix');
-    const quantityInput = document.getElementById('quantity');
-    const numberLengthInput = document.getElementById('numberLength');
-    const formatSelect = document.getElementById('format');
-    const outputDiv = document.getElementById('output');
-    const generateBtn = document.getElementById('generateBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const prefixLabel = document.getElementById('prefixLabel');
-    const quantityLabel = document.getElementById('quantityLabel');
-    const numberLengthLabel = document.getElementById('numberLengthLabel');
-    const formatLabel = document.getElementById('formatLabel');
+  <label id="prefixLabel">Prefijo del código / Code prefix</label>
+  <input type="text" id="prefix" placeholder="Ej: PROD">
 
-    const translations = {
-      es: {
-        prefix: "Prefijo del código:",
-        quantity: "Cantidad de códigos:",
-        numberLength: "Longitud del número (sec. numérica):",
-        format: "Formato de código:",
-        generateBtn: "Generar códigos",
-        copyBtn: "Copiar",
-        downloadBtn: "Descargar CSV",
-        copyAlert: "Códigos copiados al portapapeles",
-        invalid: "Por favor ingresa valores válidos.",
-        outputDefault: "Aquí aparecerán los códigos generados"
-      },
-      en: {
-        prefix: "Code prefix:",
-        quantity: "Quantity of codes:",
-        numberLength: "Number length (numeric seq):",
-        format: "Code format:",
-        generateBtn: "Generate codes",
-        copyBtn: "Copy",
-        downloadBtn: "Download CSV",
-        copyAlert: "Codes copied to clipboard",
-        invalid: "Please enter valid values.",
-        outputDefault: "Generated codes will appear here"
-      }
-    };
+  <label id="quantityLabel">Cantidad de códigos / Quantity of codes</label>
+  <input type="number" id="quantity" placeholder="Ej: 10" min="1">
 
-    function updateLanguage(lang) {
-      const t = translations[lang];
-      prefixLabel.textContent = t.prefix;
-      quantityLabel.textContent = t.quantity;
-      numberLengthLabel.textContent = t.numberLength;
-      formatLabel.textContent = t.format;
-      generateBtn.textContent = t.generateBtn;
-      copyBtn.textContent = t.copyBtn;
-      downloadBtn.textContent = t.downloadBtn;
-      outputDiv.textContent = t.outputDefault;
+  <label id="numberLengthLabel">Longitud del número (sec. numérica) / Number length</label>
+  <input type="number" id="numberLength" value="3" min="1" max="10">
+
+  <label id="formatLabel">Formato de código / Code format</label>
+  <select id="format">
+    <option value="numeric">Secuencial (001, 002...) / Sequential</option>
+    <option value="alphanumeric">Aleatorio alfanumérico / Random alphanumeric</option>
+  </select>
+
+  <div class="output" id="output">Aquí aparecerán los códigos generados / Generated codes will appear here</div>
+
+  <div class="button-group">
+    <button id="generateBtn">Generar códigos / Generate codes</button>
+    <button id="copyBtn">Copiar / Copy</button>
+    <button id="downloadBtn">Descargar CSV / Download CSV</button>
+  </div>
+
+  <div class="footer">&copy; 2026 JuanFerQuinterl | Free web tools</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const translations = {
+  es: {
+    prefix: "Prefijo del código:",
+    quantity: "Cantidad de códigos:",
+    numberLength: "Longitud del número (sec. numérica):",
+    format: "Formato de código:",
+    generateBtn: "Generar códigos",
+    copyBtn: "Copiar",
+    downloadBtn: "Descargar CSV",
+    copyAlert: "Códigos copiados al portapapeles",
+    invalid: "Por favor ingresa valores válidos.",
+    outputDefault: "Aquí aparecerán los códigos generados"
+  },
+  en: {
+    prefix: "Code prefix:",
+    quantity: "Quantity of codes:",
+    numberLength: "Number length (numeric seq):",
+    format: "Code format:",
+    generateBtn: "Generate codes",
+    copyBtn: "Copy",
+    downloadBtn: "Download CSV",
+    copyAlert: "Codes copied to clipboard",
+    invalid: "Please enter valid values.",
+    outputDefault: "Generated codes will appear here"
+  }
+};
+
+function updateLanguage(){
+  const lang=document.getElementById('langSelect').value;
+  const t=translations[lang];
+  document.getElementById('prefixLabel').textContent=t.prefix;
+  document.getElementById('quantityLabel').textContent=t.quantity;
+  document.getElementById('numberLengthLabel').textContent=t.numberLength;
+  document.getElementById('formatLabel').textContent=t.format;
+  document.getElementById('generateBtn').textContent=t.generateBtn;
+  document.getElementById('copyBtn').textContent=t.copyBtn;
+  document.getElementById('downloadBtn').textContent=t.downloadBtn;
+  document.getElementById('output').textContent=t.outputDefault;
+  localStorage.setItem('lang',lang);
+}
+
+function showToast(msg){
+  const toast=document.getElementById('toast');
+  toast.textContent=msg;
+  toast.classList.add('show');
+  setTimeout(()=>{toast.classList.remove('show');},2000);
+}
+
+function padNumber(num,size){let s=num+"";while(s.length<size)s="0"+s;return s;}
+
+function generateCodes(){
+  const prefix=document.getElementById('prefix').value.trim();
+  const quantity=parseInt(document.getElementById('quantity').value);
+  const numberLength=parseInt(document.getElementById('numberLength').value);
+  const format=document.getElementById('format').value;
+  const lang=document.getElementById('langSelect').value;
+  const t=translations[lang];
+
+  if(!prefix||isNaN(quantity)||quantity<1||isNaN(numberLength)||numberLength<1){
+    document.getElementById('output').textContent=t.invalid;
+    return;
+  }
+
+  let codes=[];
+  if(format==='numeric'){
+    for(let i=1;i<=quantity;i++) codes.push(`${prefix}${padNumber(i,numberLength)}`);
+  } else {
+    const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for(let i=0;i<quantity;i++){
+      let code="";
+      for(let j=0;j<6;j++) code+=chars.charAt(Math.floor(Math.random()*chars.length));
+      codes.push(`${prefix}${code}`);
     }
+  }
 
-    langSelect.addEventListener('change', () => updateLanguage(langSelect.value));
+  document.getElementById('output').textContent=codes.join("\n");
+}
 
-    function padNumber(num, size) {
-      let s = num + "";
-      while (s.length < size) s = "0" + s;
-      return s;
-    }
+function copyCodes(){
+  const text=document.getElementById('output').textContent.trim();
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>showToast(translations[document.getElementById('langSelect').value].copyAlert));
+}
 
-    function generateCodes() {
-      const prefix = prefixInput.value.trim();
-      const quantity = parseInt(quantityInput.value);
-      const numberLength = parseInt(numberLengthInput.value);
-      const format = formatSelect.value;
-      const lang = langSelect.value;
+function downloadCSV(){
+  const text=document.getElementById('output').textContent.trim();
+  if(!text) return;
+  const blob=new Blob([text],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download="codes.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
 
-      if (!prefix || isNaN(quantity) || quantity < 1 || isNaN(numberLength) || numberLength < 1) {
-        outputDiv.textContent = translations[lang].invalid;
-        return;
-      }
+document.getElementById('generateBtn').addEventListener('click',generateCodes);
+document.getElementById('copyBtn').addEventListener('click',copyCodes);
+document.getElementById('downloadBtn').addEventListener('click',downloadCSV);
 
-      let codes = [];
-      if (format === "numeric") {
-        for (let i = 1; i <= quantity; i++) {
-          codes.push(`${prefix}${padNumber(i, numberLength)}`);
-        }
-      } else if (format === "alphanumeric") {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        for (let i = 0; i < quantity; i++) {
-          let code = "";
-          for (let j = 0; j < 6; j++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-          }
-          codes.push(`${prefix}${code}`);
-        }
-      }
-
-      outputDiv.textContent = codes.join("\n");
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.display = 'block';
-      toast.style.opacity = 1;
-      setTimeout(() => { toast.style.opacity = 0; }, 2000);
-      setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
-
-    generateBtn.addEventListener('click', generateCodes);
-
-    copyBtn.addEventListener('click', () => {
-      if (!outputDiv.textContent.trim()) return;
-      navigator.clipboard.writeText(outputDiv.textContent).then(() => {
-        showToast(translations[langSelect.value].copyAlert);
-      });
-    });
-
-    downloadBtn.addEventListener('click', () => {
-      const text = outputDiv.textContent.trim();
-      if (!text) return;
-      const blob = new Blob([text], {type: "text/csv"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "codigos.csv";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    // Inicializa idioma
-    updateLanguage('es');
-  </script>
+window.onload=()=>{
+  const savedLang=localStorage.getItem('lang');
+  if(savedLang){document.getElementById('langSelect').value=savedLang;}
+  updateLanguage();
+};
+</script>
 </body>
 </html>

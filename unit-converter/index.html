@@ -21,7 +21,7 @@ button:hover {background-color:#45a049;}
 <body>
 
 <div class="container">
-  <h1>UnitConverter</h1>
+  <h1 id="title">UnitConverter</h1>
 
   <label for="langSelect">Idioma / Language:</label>
   <select id="langSelect">
@@ -47,8 +47,8 @@ button:hover {background-color:#45a049;}
   <input type="number" id="value" placeholder="Ej: 10">
 
   <div class="button-group">
-    <button id="convertBtn">Convertir / Convert</button>
-    <button id="copyBtn">Copiar resultado / Copy result</button>
+    <button id="convertBtn">Convertir</button>
+    <button id="copyBtn">Copiar resultado</button>
   </div>
 
   <div class="result" id="result"></div>
@@ -71,9 +71,11 @@ const typeLabel = document.getElementById('typeLabel');
 const fromLabel = document.getElementById('fromLabel');
 const toLabel = document.getElementById('toLabel');
 const valueLabel = document.getElementById('valueLabel');
+const title = document.getElementById('title');
 
 const translations = {
   es: {
+    title:"UnitConverter",
     type:"Tipo",
     from:"De",
     to:"A",
@@ -84,6 +86,7 @@ const translations = {
     invalid:"Por favor ingresa un valor"
   },
   en: {
+    title:"UnitConverter",
     type:"Type",
     from:"From",
     to:"To",
@@ -95,8 +98,9 @@ const translations = {
   }
 };
 
-function updateLanguage(lang){
-  const t = translations[lang];
+function updateLanguage(){
+  const t = translations[langSelect.value];
+  title.textContent = t.title;
   typeLabel.textContent = t.type;
   fromLabel.textContent = t.from;
   toLabel.textContent = t.to;
@@ -104,9 +108,8 @@ function updateLanguage(lang){
   convertBtn.textContent = t.convertBtn;
   copyBtn.textContent = t.copyBtn;
 }
-
-langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
-updateLanguage('es');
+langSelect.addEventListener('change',updateLanguage);
+updateLanguage();
 
 // Unidades
 const units = {
@@ -122,13 +125,13 @@ function populateUnits(){
   toSelect.innerHTML = "";
   if(type==="temperature"){
     units.temperature.forEach(u=>{
-      const opt1=document.createElement("option"); opt1.value=u; opt1.textContent=u; fromSelect.appendChild(opt1);
-      const opt2=document.createElement("option"); opt2.value=u; opt2.textContent=u; toSelect.appendChild(opt2);
+      fromSelect.innerHTML += `<option value="${u}">${u}</option>`;
+      toSelect.innerHTML += `<option value="${u}">${u}</option>`;
     });
-  }else{
+  } else {
     Object.keys(units[type]).forEach(u=>{
-      const opt1=document.createElement("option"); opt1.value=u; opt1.textContent=u; fromSelect.appendChild(opt1);
-      const opt2=document.createElement("option"); opt2.value=u; opt2.textContent=u; toSelect.appendChild(opt2);
+      fromSelect.innerHTML += `<option value="${u}">${u}</option>`;
+      toSelect.innerHTML += `<option value="${u}">${u}</option>`;
     });
   }
 }
@@ -155,19 +158,17 @@ function convert(){
 
   let result;
   if(type==="temperature"){
-    // Convertir primero a Celsius
+    // Convertir a Celsius primero
     if(from==="C") result=value;
     else if(from==="F") result=(value-32)*5/9;
     else if(from==="K") result=value-273.15;
 
-    // Convertir de Celsius a destino
+    // Convertir a destino
     if(to==="C") result=result;
     else if(to==="F") result=result*9/5+32;
     else if(to==="K") result=result+273.15;
   } else {
-    // Convertir a base
-    result = value*units[type][from];
-    result = result/units[type][to];
+    result = value*units[type][from]/units[type][to];
   }
 
   resultDiv.textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;

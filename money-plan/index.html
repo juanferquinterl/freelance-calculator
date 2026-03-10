@@ -66,11 +66,9 @@
     <div class="footer">Money-Plan &copy; 2026</div>
   </div>
 
-  <!-- Toast moderno -->
   <div id="toast"></div>
 
   <script>
-    // Elementos
     const langSelect = document.getElementById('langSelect');
     const title = document.getElementById('title');
     const description = document.getElementById('description');
@@ -83,7 +81,6 @@
     const copyBtn = document.getElementById('copyBtn');
     const savePercent = document.getElementById('savePercent');
 
-    // Traducciones
     const translations = {
       es: {
         title: "Money-Plan",
@@ -111,7 +108,6 @@
       }
     };
 
-    // Actualiza idioma
     function updateLanguage(lang){
       const t = translations[lang];
       title.textContent = t.title;
@@ -126,12 +122,8 @@
 
     langSelect.addEventListener('change', () => updateLanguage(langSelect.value));
 
-    // Slider dinámico
-    savePercent.addEventListener('input', () => {
-      percentLabel.textContent = savePercent.value;
-    });
+    savePercent.addEventListener('input', () => { percentLabel.textContent = savePercent.value; });
 
-    // Calcular ahorro
     function calculateSavings() {
       const income = parseFloat(document.getElementById('income').value);
       const expenses = parseFloat(document.getElementById('expenses').value);
@@ -154,20 +146,14 @@
 
     calculateBtn.addEventListener('click', calculateSavings);
 
-    // Toast moderno
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.style.display = 'block';
       toast.style.opacity = 1;
 
-      setTimeout(() => {
-        toast.style.opacity = 0;
-      }, 2000);
-
-      setTimeout(() => {
-        toast.style.display = 'none';
-      }, 2500);
+      setTimeout(() => { toast.style.opacity = 0; }, 2000);
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
     }
 
     copyBtn.addEventListener('click', () => {
@@ -176,7 +162,7 @@
       });
     });
 
-    // Inicializa idioma
+    // Inicial
     updateLanguage('es');
   </script>
 </body>

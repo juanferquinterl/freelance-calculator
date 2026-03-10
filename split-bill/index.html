@@ -92,17 +92,19 @@ const translations = {
   }
 };
 
-function updateLanguage(lang){
-  const t = translations[lang];
-  totalLabel.textContent=t.total;
-  tipLabel.textContent=t.tip;
-  peopleLabel.textContent=t.people;
-  calculateBtn.textContent=t.calculateBtn;
-  copyBtn.textContent=t.copyBtn;
+// Cambiar textos al cambiar idioma
+function updateLanguage(){
+  const t = translations[langSelect.value];
+  totalLabel.textContent = t.total;
+  tipLabel.textContent = t.tip;
+  peopleLabel.textContent = t.people;
+  calculateBtn.textContent = t.calculateBtn;
+  copyBtn.textContent = t.copyBtn;
 }
-langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
-updateLanguage('es');
+langSelect.addEventListener('change', updateLanguage);
+updateLanguage();
 
+// Toast
 function showToast(message){
   toast.textContent = message;
   toast.style.display='block';
@@ -111,6 +113,7 @@ function showToast(message){
   setTimeout(()=>{toast.style.display='none';},2500);
 }
 
+// Calcular reparto
 function calculateSplit(){
   const lang = langSelect.value;
   const t = translations[lang];
@@ -145,6 +148,7 @@ function calculateSplit(){
   resultDiv.textContent = output;
 }
 
+// Copiar resultado
 function copyResult(){
   const lang = langSelect.value;
   const t = translations[lang];

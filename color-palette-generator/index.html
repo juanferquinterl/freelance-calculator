@@ -8,9 +8,9 @@
 <style>
 * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background:#f0f2f5; display:flex; justify-content:center; padding:20px; }
-.container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:600px; width:100%; margin-top:30px; }
+.container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:600px; width:100%; margin-top:30px; text-align:center; }
 h1 { text-align:center; margin-bottom:20px; color:#333; }
-label { display:block; margin-top:15px; font-weight:600; color:#555; }
+label { display:block; margin-top:15px; font-weight:600; color:#555; text-align:left; }
 input[type="color"], input[type="text"], select { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
 .button-group { display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px; }
 button { flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s; }
@@ -23,7 +23,7 @@ button:hover { background-color:#45a049; }
 <body>
 
 <div class="container">
-  <h1>Color Palette Generator</h1>
+  <h1 id="title">Color Palette Generator</h1>
 
   <label for="langSelect">Idioma / Language:</label>
   <select id="langSelect">
@@ -56,9 +56,10 @@ button:hover { background-color:#45a049; }
 <div id="toast"></div>
 
 <script>
-// traducciones
+// ====================== Traducciones ======================
 const translations = {
   es:{
+    title:"Generador de Paleta",
     colorLabel:"Color base",
     scheme:"Esquema de colores",
     generateBtn:"Generar paleta",
@@ -69,6 +70,7 @@ const translations = {
     paletteTitle:"Paleta de colores"
   },
   en:{
+    title:"Color Palette Generator",
     colorLabel:"Base color",
     scheme:"Color scheme",
     generateBtn:"Generate palette",
@@ -80,7 +82,9 @@ const translations = {
   }
 };
 
+// ====================== DOM ======================
 const langSelect = document.getElementById('langSelect');
+const titleEl = document.getElementById('title');
 const colorLabel = document.getElementById('colorLabel');
 const schemeLabel = document.getElementById('schemeLabel');
 const generateBtn = document.getElementById('generateBtn');
@@ -90,6 +94,7 @@ const pngBtn = document.getElementById('pngBtn');
 
 function updateLanguage(lang){
   const t = translations[lang];
+  titleEl.textContent = t.title;
   colorLabel.textContent = t.colorLabel;
   schemeLabel.textContent = t.scheme;
   generateBtn.textContent = t.generateBtn;
@@ -100,7 +105,7 @@ function updateLanguage(lang){
 langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
 updateLanguage('es');
 
-// Toast
+// ====================== Toast ======================
 const toast = document.getElementById('toast');
 function showToast(message){
   toast.textContent = message;
@@ -110,29 +115,80 @@ function showToast(message){
   setTimeout(()=>{toast.style.display='none';},2500);
 }
 
-// utils
-function hexToRgb(hex){let r=parseInt(hex.slice(1,3),16); let g=parseInt(hex.slice(3,5),16); let b=parseInt(hex.slice(5,7),16); return [r,g,b];}
-function rgbToHex(r,g,b){return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+// ====================== Utils ======================
+function hexToRgb(hex){
+  let r=parseInt(hex.slice(1,3),16);
+  let g=parseInt(hex.slice(3,5),16);
+  let b=parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+function rgbToHex(r,g,b){
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  let max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max==min){h=s=0;}else{
+    let d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r: h=(g-b)/d+(g<b?6:0); break;
+      case g: h=(b-r)/d+2; break;
+      case b: h=(r-g)/d+4; break;
+    }
+    h*=60;
+  }
+  return [h,s,l];
+}
+function hslToHex(h,s,l){
+  let c=(1-Math.abs(2*l-1))*s;
+  let x=c*(1-Math.abs((h/60)%2-1));
+  let m=l-c/2;
+  let r1,g1,b1;
+  if(h<60){r1=c; g1=x; b1=0;}
+  else if(h<120){r1=x; g1=c; b1=0;}
+  else if(h<180){r1=0; g1=c; b1=x;}
+  else if(h<240){r1=0; g1=x; b1=c;}
+  else if(h<300){r1=x; g1=0; b1=c;}
+  else{r1=c; g1=0; b1=x;}
+  let r=Math.round((r1+m)*255);
+  let g=Math.round((g1+m)*255);
+  let b=Math.round((b1+m)*255);
+  return rgbToHex(r,g,b);
+}
 
-// HSL conversion
-function rgbToHsl(r,g,b){r/=255; g/=255; b/=255; let max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2; if(max==min){h=s=0;}else{let d=max-min; s=l>0.5?d/(2-max-min):d/(max+min); switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;} h*=60;} return [h,s,l];}
-function hslToHex(h,s,l){let c=(1-Math.abs(2*l-1))*s; let x=c*(1-Math.abs((h/60)%2-1)); let m=l-c/2; let r1,g1,b1;if(h<60){r1=c; g1=x; b1=0;}else if(h<120){r1=x; g1=c; b1=0;}else if(h<180){r1=0; g1=c; b1=x;}else if(h<240){r1=0; g1=x; b1=c;}else if(h<300){r1=x; g1=0; b1=c;}else{r1=c; g1=0; b1=x;} let r=Math.round((r1+m)*255); let g=Math.round((g1+m)*255); let b=Math.round((b1+m)*255); return rgbToHex(r,g,b);}
-
-// palette generation
+// ====================== Generación de paleta ======================
 function generateScheme(baseHex, type){
   let rgb = hexToRgb(baseHex);
   let hsl = rgbToHsl(...rgb);
   let palette = [];
   switch(type){
-    case "complementary": palette.push(baseHex); palette.push(hslToHex((hsl[0]+180)%360,hsl[1],hsl[2])); break;
-    case "analogous": palette.push(baseHex); palette.push(hslToHex((hsl[0]+30)%360,hsl[1],hsl[2])); palette.push(hslToHex((hsl[0]+330)%360,hsl[1],hsl[2])); break;
-    case "triadic": palette.push(baseHex); palette.push(hslToHex((hsl[0]+120)%360,hsl[1],hsl[2])); palette.push(hslToHex((hsl[0]+240)%360,hsl[1],hsl[2])); break;
-    case "tetradic": palette.push(baseHex); palette.push(hslToHex((hsl[0]+90)%360,hsl[1],hsl[2])); palette.push(hslToHex((hsl[0]+180)%360,hsl[1],hsl[2])); palette.push(hslToHex((hsl[0]+270)%360,hsl[1],hsl[2])); break;
+    case "complementary":
+      palette.push(baseHex);
+      palette.push(hslToHex((hsl[0]+180)%360,hsl[1],hsl[2]));
+      break;
+    case "analogous":
+      palette.push(baseHex);
+      palette.push(hslToHex((hsl[0]+30)%360,hsl[1],hsl[2]));
+      palette.push(hslToHex((hsl[0]+330)%360,hsl[1],hsl[2]));
+      break;
+    case "triadic":
+      palette.push(baseHex);
+      palette.push(hslToHex((hsl[0]+120)%360,hsl[1],hsl[2]));
+      palette.push(hslToHex((hsl[0]+240)%360,hsl[1],hsl[2]));
+      break;
+    case "tetradic":
+      palette.push(baseHex);
+      palette.push(hslToHex((hsl[0]+90)%360,hsl[1],hsl[2]));
+      palette.push(hslToHex((hsl[0]+180)%360,hsl[1],hsl[2]));
+      palette.push(hslToHex((hsl[0]+270)%360,hsl[1],hsl[2]));
+      break;
   }
   return palette;
 }
 
-// DOM elements
+// ====================== DOM Elements ======================
 const baseColor = document.getElementById('baseColor');
 const hexInput = document.getElementById('hexInput');
 const schemeSelect = document.getElementById('scheme');
@@ -154,7 +210,7 @@ function renderPalette(){
   return palette;
 }
 
-// sincronizar color picker y hex input
+// Sincronizar color picker y hex input
 baseColor.addEventListener('input',()=>{hexInput.value=baseColor.value; renderPalette();});
 hexInput.addEventListener('input',()=>{baseColor.value=hexInput.value; renderPalette();});
 
@@ -164,7 +220,7 @@ copyBtn.addEventListener('click', ()=>{
   navigator.clipboard.writeText(colors).then(()=>showToast(translations[langSelect.value].copyAlert));
 });
 
-// PDF download
+// ====================== PDF download ======================
 pdfBtn.addEventListener('click',()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:"landscape" });
@@ -172,7 +228,7 @@ pdfBtn.addEventListener('click',()=>{
   const t = translations[langSelect.value];
 
   doc.setFontSize(22);
-  doc.text(t.paletteTitle, 105, 20, null, null, "center");
+  doc.text(t.paletteTitle, doc.internal.pageSize.getWidth()/2, 20, null, null, "center");
 
   palette.forEach((color,i)=>{
     doc.setFillColor(color);
@@ -185,7 +241,7 @@ pdfBtn.addEventListener('click',()=>{
   doc.save(`${t.paletteTitle}.pdf`);
 });
 
-// PNG download
+// ====================== PNG download ======================
 pngBtn.addEventListener('click',()=>{
   const palette = renderPalette();
   const canvas = document.createElement('canvas');
@@ -207,7 +263,7 @@ pngBtn.addEventListener('click',()=>{
   link.click();
 });
 
-// inicial
+// Inicial
 renderPalette();
 </script>
 

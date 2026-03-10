@@ -7,16 +7,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-* {box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-body {background:#f0f2f5; display:flex; justify-content:center; padding:20px;}
-.container {background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; margin-top:30px;}
-h1 {text-align:center; margin-bottom:20px; color:#333;}
-label {display:block; margin-top:10px; font-weight:600; color:#555;}
-input[type="text"], input[type="email"], select {width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px;}
-.button-group {display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px;}
-button {flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s;}
-button:hover {background-color:#45a049;}
-#toast {position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000;}
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background:#f0f2f5; display:flex; justify-content:center; padding:20px; }
+.container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; margin-top:30px; }
+h1 { text-align:center; margin-bottom:20px; color:#333; }
+label { display:block; margin-top:10px; font-weight:600; color:#555; }
+input[type="text"], input[type="email"], select { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
+.button-group { display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px; }
+button { flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s; }
+button:hover { background-color:#45a049; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000; }
 </style>
 </head>
 <body>
@@ -102,8 +102,9 @@ const translations = {
   }
 };
 
-function updateLanguage(lang){
-  const t = translations[lang];
+// Cambiar textos visibles al seleccionar idioma
+function updateLanguage(){
+  const t = translations[langSelect.value];
   recipientLabel.textContent = t.recipient;
   addressLabel.textContent = t.address;
   cityLabel.textContent = t.city;
@@ -113,9 +114,11 @@ function updateLanguage(lang){
   generateBtn.textContent = t.generateBtn;
   copyBtn.textContent = t.copyBtn;
 }
-langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
-updateLanguage('es');
 
+langSelect.addEventListener('change', updateLanguage);
+updateLanguage(); // inicializa los textos
+
+// Toast
 function showToast(message){
   toast.textContent = message;
   toast.style.display='block';
@@ -124,6 +127,7 @@ function showToast(message){
   setTimeout(()=>{toast.style.display='none';},2500);
 }
 
+// Generar PDF etiqueta
 function generateLabel(){
   const recipient = recipientInput.value.trim();
   const address = addressInput.value.trim();
@@ -131,8 +135,7 @@ function generateLabel(){
   const postal = postalInput.value.trim();
   const country = countryInput.value.trim();
   const contact = contactInput.value.trim();
-  const lang = langSelect.value;
-  const t = translations[lang];
+  const t = translations[langSelect.value];
 
   if(!recipient || !address || !city || !postal || !country || !contact){
     showToast(t.invalid);
@@ -141,18 +144,17 @@ function generateLabel(){
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:'mm', format:[100,150]});
-
-  const leftMargin = 10;
   let y = 15;
+  const leftMargin = 10;
 
-  // Bloque de información con fondo gris claro
+  // Fondo gris claro
   doc.setFillColor(245,245,245);
   doc.roundedRect(5,10,90,70,3,3,'F');
 
-  // Tipografía jerárquica
+  // Info
   doc.setFont("helvetica","bold");
   doc.setFontSize(14);
-  doc.text(`${recipient}`, leftMargin, y); y+=10;
+  doc.text(recipient,leftMargin,y); y+=10;
 
   doc.setFont("helvetica","normal");
   doc.setFontSize(11);
@@ -162,14 +164,14 @@ function generateLabel(){
   doc.text(`${t.country}: ${country}`, leftMargin, y); y+=7;
   doc.text(`${t.contact}: ${contact}`, leftMargin, y);
 
-  // Separador suave
+  // Línea separadora
   doc.setLineWidth(0.3);
   doc.line(5,85,95,85);
 
-  // QR abajo
+  // QR
   const qrData = `Recipient: ${recipient}\nAddress: ${address}\nCity: ${city}\nPostal: ${postal}\nCountry: ${country}\nContact: ${contact}`;
   const qrDiv = document.createElement("div");
-  const qr = new QRCode(qrDiv, {text: qrData, width:200, height:200});
+  const qr = new QRCode(qrDiv,{text: qrData, width:200, height:200});
   const qrCanvas = qr._oDrawing._elCanvas;
   const qrImgData = qrCanvas.toDataURL("image/png");
 
@@ -181,6 +183,7 @@ function generateLabel(){
   doc.save(`${recipient}_label.pdf`);
 }
 
+// Copiar datos al portapapeles
 function copyData(){
   const recipient = recipientInput.value.trim();
   const address = addressInput.value.trim();
@@ -188,8 +191,7 @@ function copyData(){
   const postal = postalInput.value.trim();
   const country = countryInput.value.trim();
   const contact = contactInput.value.trim();
-  const lang = langSelect.value;
-  const t = translations[lang];
+  const t = translations[langSelect.value];
 
   if(!recipient || !address || !city || !postal || !country || !contact){
     showToast(t.invalid);
