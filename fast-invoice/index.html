@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastInvoice | My Web Tools</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body { background:#f0f2f5; display:flex; justify-content:center; padding:20px; }
+  .container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:550px; width:100%; margin-top:30px; }
+  h1 { text-align:center; margin-bottom:20px; color:#333; }
+  label { display:block; margin-top:15px; font-weight:600; color:#555; }
+  input[type="text"], input[type="number"], textarea, select { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
+  textarea { resize:vertical; min-height:60px; }
+  .button-group { display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px; }
+  button { flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s ease; }
+  button:hover { background-color:#45a049; }
+  .footer { text-align:center; margin-top:15px; font-size:14px; color:#777; }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>FastInvoice</h1>
+
+  <label for="langSelect">Idioma / Language:</label>
+  <select id="langSelect">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <label for="seller" id="sellerLabel">Vendedor / Seller:</label>
+  <input type="text" id="seller" placeholder="Ej: JuanFerQuinterl">
+
+  <label for="client" id="clientLabel">Nombre del cliente:</label>
+  <input type="text" id="client" placeholder="Ej: Juan Pérez">
+
+  <label for="date" id="dateLabel">Fecha:</label>
+  <input type="text" id="date" placeholder="DD/MM/YYYY">
+
+  <label for="item" id="itemLabel">Producto / Servicio:</label>
+  <input type="text" id="item" placeholder="Ej: Diseño web">
+
+  <label for="quantity" id="quantityLabel">Cantidad:</label>
+  <input type="number" id="quantity" value="1" min="1">
+
+  <label for="price" id="priceLabel">Precio unitario:</label>
+  <input type="number" id="price" value="0" min="0">
+
+  <label for="iva" id="ivaLabel">Incluir IVA 21%:</label>
+  <input type="checkbox" id="iva" checked>
+
+  <label for="notes" id="notesLabel">Notas / Observaciones:</label>
+  <textarea id="notes" placeholder="Opcional"></textarea>
+
+  <div class="button-group">
+    <button id="generateBtn">Generar PDF</button>
+    <button id="copyBtn">Copiar datos</button>
+  </div>
+
+  <div class="footer">&copy; 2026 JuanFerQuinterl | Free web tools</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const langSelect = document.getElementById('langSelect');
+const sellerInput = document.getElementById('seller');
+const clientInput = document.getElementById('client');
+const dateInput = document.getElementById('date');
+const itemInput = document.getElementById('item');
+const quantityInput = document.getElementById('quantity');
+const priceInput = document.getElementById('price');
+const ivaCheckbox = document.getElementById('iva');
+const notesInput = document.getElementById('notes');
+const generateBtn = document.getElementById('generateBtn');
+const copyBtn = document.getElementById('copyBtn');
+const toast = document.getElementById('toast');
+
+const sellerLabel = document.getElementById('sellerLabel');
+const clientLabel = document.getElementById('clientLabel');
+const dateLabel = document.getElementById('dateLabel');
+const itemLabel = document.getElementById('itemLabel');
+const quantityLabel = document.getElementById('quantityLabel');
+const priceLabel = document.getElementById('priceLabel');
+const ivaLabel = document.getElementById('ivaLabel');
+const notesLabel = document.getElementById('notesLabel');
+
+const translations = {
+  es:{
+    seller:"Vendedor",
+    client:"Nombre del cliente",
+    date:"Fecha",
+    item:"Producto / Servicio",
+    quantity:"Cantidad",
+    price:"Precio unitario",
+    iva:"Incluir IVA 21%",
+    notes:"Notas / Observaciones",
+    generateBtn:"Generar PDF",
+    copyBtn:"Copiar datos",
+    copyAlert:"Datos copiados al portapapeles",
+    invalid:"Por favor completa todos los campos requeridos.",
+    invoiceTitle:"Factura",
+    subtotal:"Subtotal",
+    tax:"IVA 21%",
+    total:"Total",
+    signatureSeller:"Firma del vendedor",
+    signatureClient:"Firma del comprador"
+  },
+  en:{
+    seller:"Seller",
+    client:"Client name",
+    date:"Date",
+    item:"Product / Service",
+    quantity:"Quantity",
+    price:"Unit price",
+    iva:"Include Tax 21%",
+    notes:"Notes / Remarks",
+    generateBtn:"Generate PDF",
+    copyBtn:"Copy data",
+    copyAlert:"Data copied to clipboard",
+    invalid:"Please fill in all required fields.",
+    invoiceTitle:"Invoice",
+    subtotal:"Subtotal",
+    tax:"Tax 21%",
+    total:"Total",
+    signatureSeller:"Seller signature",
+    signatureClient:"Client signature"
+  }
+};
+
+function updateLanguage(lang){
+  const t = translations[lang];
+  sellerLabel.textContent=t.seller;
+  clientLabel.textContent=t.client;
+  dateLabel.textContent=t.date;
+  itemLabel.textContent=t.item;
+  quantityLabel.textContent=t.quantity;
+  priceLabel.textContent=t.price;
+  ivaLabel.textContent=t.iva;
+  notesLabel.textContent=t.notes;
+  generateBtn.textContent=t.generateBtn;
+  copyBtn.textContent=t.copyBtn;
+}
+langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
+updateLanguage('es');
+
+function showToast(message){
+  toast.textContent=message;
+  toast.style.display='block';
+  toast.style.opacity=1;
+  setTimeout(()=>{toast.style.opacity=0;},2000);
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
+function generatePDF(){
+  const seller=sellerInput.value.trim();
+  const client=clientInput.value.trim();
+  const date=dateInput.value.trim();
+  const item=itemInput.value.trim();
+  const quantity=parseFloat(quantityInput.value);
+  const price=parseFloat(priceInput.value);
+  const ivaIncluded=ivaCheckbox.checked;
+  const notes=notesInput.value.trim();
+  const lang=langSelect.value;
+  const t=translations[lang];
+
+  if(!seller || !client || !date || !item || isNaN(quantity) || isNaN(price)){
+    showToast(t.invalid);
+    return;
+  }
+
+  const subtotal=quantity*price;
+  const tax=ivaIncluded ? subtotal*0.21 : 0;
+  const total=subtotal+tax;
+
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF();
+
+  doc.setFontSize(22);
+  doc.text(t.invoiceTitle,105,20,null,null,"center");
+  doc.setFontSize(12);
+  doc.text(`${t.seller}: ${seller}`,20,35);
+  doc.text(`${t.client}: ${client}`,20,45);
+  doc.text(`${t.date}: ${date}`,20,55);
+
+  doc.setLineWidth(0.5);
+  doc.line(20,60,190,60);
+
+  doc.setFontSize(12);
+  doc.text(t.item,20,70);
+  doc.text(t.quantity,90,70);
+  doc.text(t.price,130,70);
+  doc.text(t.total,170,70);
+
+  doc.text(item,20,80);
+  doc.text(quantity.toString(),90,80);
+  doc.text(`$${price.toFixed(2)}`,130,80);
+  doc.text(`$${(price*quantity).toFixed(2)}`,170,80);
+
+  doc.line(20,85,190,85);
+
+  doc.text(`${t.subtotal}: $${subtotal.toFixed(2)}`,130,95);
+  if(ivaIncluded) doc.text(`${t.tax}: $${tax.toFixed(2)}`,130,105);
+  doc.text(`${t.total}: $${total.toFixed(2)}`,130,115);
+
+  if(notes){
+    const splitNotes = doc.splitTextToSize(`${t.notes}: ${notes}`, 170);
+    doc.text(splitNotes,20,130);
+  }
+
+  // Firmas más abajo
+  const signatureY = 180;
+  doc.setLineWidth(0.2);
+  doc.line(20,signatureY,80,signatureY); // vendedor
+  doc.line(120,signatureY,190,signatureY); // comprador
+  doc.text(t.signatureSeller,20,signatureY+5);
+  doc.text(t.signatureClient,120,signatureY+5);
+
+  doc.save(`${t.invoiceTitle}.pdf`);
+}
+
+function copyData(){
+  const seller=sellerInput.value.trim();
+  const client=clientInput.value.trim();
+  const date=dateInput.value.trim();
+  const item=itemInput.value.trim();
+  const quantity=quantityInput.value;
+  const price=priceInput.value;
+  const ivaIncluded=ivaCheckbox.checked ? "Sí" : "No";
+  const notes=notesInput.value.trim();
+  const lang=langSelect.value;
+  const t=translations[lang];
+
+  const text=`
+${t.seller}: ${seller}
+${t.client}: ${client}
+${t.date}: ${date}
+${t.item}: ${item}
+${t.quantity}: ${quantity}
+${t.price}: $${price}
+IVA: ${ivaIncluded}
+${t.notes}: ${notes}
+  `.trim();
+
+  navigator.clipboard.writeText(text).then(()=>showToast(t.copyAlert));
+}
+
+generateBtn.addEventListener('click',generatePDF);
+copyBtn.addEventListener('click',copyData);
+</script>
+</body>
+</html>

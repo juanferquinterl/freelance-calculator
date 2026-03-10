@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKU Generator | My Web Tools</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background:#f0f2f5; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
+    .container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; }
+    h1 { text-align:center; margin-bottom:20px; color:#333; }
+    label { display:block; margin-top:15px; font-weight:600; color:#555; }
+    input[type="text"], input[type="number"], select { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
+    .output { margin-top:20px; background:#f7f9fc; padding:15px; border-radius:8px; border:1px solid #e1e4eb; min-height:120px; white-space: pre-line; font-size:16px; color:#333; }
+    button { margin-top:15px; width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s ease; }
+    button:hover { background-color:#45a049; }
+    .button-group { display:flex; justify-content:space-between; }
+    .footer { text-align:center; margin-top:15px; font-size:14px; color:#777; }
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SKU Generator</h1>
+
+    <label for="langSelect">Idioma / Language:</label>
+    <select id="langSelect">
+      <option value="es">Español</option>
+      <option value="en">English</option>
+    </select>
+
+    <label for="prefix" id="prefixLabel">Prefijo del código:</label>
+    <input type="text" id="prefix" placeholder="Ej: PROD">
+
+    <label for="quantity" id="quantityLabel">Cantidad de códigos:</label>
+    <input type="number" id="quantity" placeholder="Ej: 10" min="1">
+
+    <label for="numberLength" id="numberLengthLabel">Longitud del número (sec. numérica):</label>
+    <input type="number" id="numberLength" value="3" min="1" max="10">
+
+    <label for="format" id="formatLabel">Formato de código:</label>
+    <select id="format">
+      <option value="numeric">Secuencial (001, 002...)</option>
+      <option value="alphanumeric">Aleatorio alfanumérico</option>
+    </select>
+
+    <div class="output" id="output">Aquí aparecerán los códigos generados</div>
+
+    <div class="button-group">
+      <button id="generateBtn">Generar códigos</button>
+      <button id="copyBtn">Copiar</button>
+      <button id="downloadBtn">Descargar CSV</button>
+    </div>
+
+    <div class="footer">&copy; 2026 JuanFerQuinterl | Free web tools</div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const langSelect = document.getElementById('langSelect');
+    const prefixInput = document.getElementById('prefix');
+    const quantityInput = document.getElementById('quantity');
+    const numberLengthInput = document.getElementById('numberLength');
+    const formatSelect = document.getElementById('format');
+    const outputDiv = document.getElementById('output');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const prefixLabel = document.getElementById('prefixLabel');
+    const quantityLabel = document.getElementById('quantityLabel');
+    const numberLengthLabel = document.getElementById('numberLengthLabel');
+    const formatLabel = document.getElementById('formatLabel');
+
+    const translations = {
+      es: {
+        prefix: "Prefijo del código:",
+        quantity: "Cantidad de códigos:",
+        numberLength: "Longitud del número (sec. numérica):",
+        format: "Formato de código:",
+        generateBtn: "Generar códigos",
+        copyBtn: "Copiar",
+        downloadBtn: "Descargar CSV",
+        copyAlert: "Códigos copiados al portapapeles",
+        invalid: "Por favor ingresa valores válidos.",
+        outputDefault: "Aquí aparecerán los códigos generados"
+      },
+      en: {
+        prefix: "Code prefix:",
+        quantity: "Quantity of codes:",
+        numberLength: "Number length (numeric seq):",
+        format: "Code format:",
+        generateBtn: "Generate codes",
+        copyBtn: "Copy",
+        downloadBtn: "Download CSV",
+        copyAlert: "Codes copied to clipboard",
+        invalid: "Please enter valid values.",
+        outputDefault: "Generated codes will appear here"
+      }
+    };
+
+    function updateLanguage(lang) {
+      const t = translations[lang];
+      prefixLabel.textContent = t.prefix;
+      quantityLabel.textContent = t.quantity;
+      numberLengthLabel.textContent = t.numberLength;
+      formatLabel.textContent = t.format;
+      generateBtn.textContent = t.generateBtn;
+      copyBtn.textContent = t.copyBtn;
+      downloadBtn.textContent = t.downloadBtn;
+      outputDiv.textContent = t.outputDefault;
+    }
+
+    langSelect.addEventListener('change', () => updateLanguage(langSelect.value));
+
+    function padNumber(num, size) {
+      let s = num + "";
+      while (s.length < size) s = "0" + s;
+      return s;
+    }
+
+    function generateCodes() {
+      const prefix = prefixInput.value.trim();
+      const quantity = parseInt(quantityInput.value);
+      const numberLength = parseInt(numberLengthInput.value);
+      const format = formatSelect.value;
+      const lang = langSelect.value;
+
+      if (!prefix || isNaN(quantity) || quantity < 1 || isNaN(numberLength) || numberLength < 1) {
+        outputDiv.textContent = translations[lang].invalid;
+        return;
+      }
+
+      let codes = [];
+      if (format === "numeric") {
+        for (let i = 1; i <= quantity; i++) {
+          codes.push(`${prefix}${padNumber(i, numberLength)}`);
+        }
+      } else if (format === "alphanumeric") {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        for (let i = 0; i < quantity; i++) {
+          let code = "";
+          for (let j = 0; j < 6; j++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          codes.push(`${prefix}${code}`);
+        }
+      }
+
+      outputDiv.textContent = codes.join("\n");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      toast.style.opacity = 1;
+      setTimeout(() => { toast.style.opacity = 0; }, 2000);
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    }
+
+    generateBtn.addEventListener('click', generateCodes);
+
+    copyBtn.addEventListener('click', () => {
+      if (!outputDiv.textContent.trim()) return;
+      navigator.clipboard.writeText(outputDiv.textContent).then(() => {
+        showToast(translations[langSelect.value].copyAlert);
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const text = outputDiv.textContent.trim();
+      if (!text) return;
+      const blob = new Blob([text], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "codigos.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Inicializa idioma
+    updateLanguage('es');
+  </script>
+</body>
+</html>
