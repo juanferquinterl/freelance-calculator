@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShippingLabel | Generador de etiquetas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* {box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body {background:#f0f2f5; display:flex; justify-content:center; padding:20px;}
+.container {background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; margin-top:30px;}
+h1 {text-align:center; margin-bottom:20px; color:#333;}
+label {display:block; margin-top:10px; font-weight:600; color:#555;}
+input[type="text"], input[type="email"], select {width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px;}
+.button-group {display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px;}
+button {flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s;}
+button:hover {background-color:#45a049;}
+#toast {position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ShippingLabel</h1>
+
+  <label for="langSelect">Idioma / Language:</label>
+  <select id="langSelect">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <label id="recipientLabel">Destinatario / Recipient:</label>
+  <input type="text" id="recipient" placeholder="Ej: Juan Pérez">
+
+  <label id="addressLabel">Dirección / Address:</label>
+  <input type="text" id="address" placeholder="Calle, número, piso">
+
+  <label id="cityLabel">Ciudad / City:</label>
+  <input type="text" id="city" placeholder="Ej: Buenos Aires">
+
+  <label id="postalLabel">Código postal / Postal Code:</label>
+  <input type="text" id="postal" placeholder="Ej: 1000">
+
+  <label id="countryLabel">País / Country:</label>
+  <input type="text" id="country" placeholder="Ej: Argentina">
+
+  <label id="contactLabel">Teléfono/Email / Contact:</label>
+  <input type="text" id="contact" placeholder="Ej: 123456789 / mail@ejemplo.com">
+
+  <div class="button-group">
+    <button id="generateBtn">Generar etiqueta</button>
+    <button id="copyBtn">Copiar datos</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const langSelect = document.getElementById('langSelect');
+const recipientInput = document.getElementById('recipient');
+const addressInput = document.getElementById('address');
+const cityInput = document.getElementById('city');
+const postalInput = document.getElementById('postal');
+const countryInput = document.getElementById('country');
+const contactInput = document.getElementById('contact');
+const generateBtn = document.getElementById('generateBtn');
+const copyBtn = document.getElementById('copyBtn');
+const toast = document.getElementById('toast');
+
+const recipientLabel = document.getElementById('recipientLabel');
+const addressLabel = document.getElementById('addressLabel');
+const cityLabel = document.getElementById('cityLabel');
+const postalLabel = document.getElementById('postalLabel');
+const countryLabel = document.getElementById('countryLabel');
+const contactLabel = document.getElementById('contactLabel');
+
+const translations = {
+  es: {
+    recipient:"Destinatario",
+    address:"Dirección",
+    city:"Ciudad",
+    postal:"Código postal",
+    country:"País",
+    contact:"Teléfono/Email",
+    generateBtn:"Generar etiqueta",
+    copyBtn:"Copiar datos",
+    copyAlert:"Datos copiados al portapapeles",
+    invalid:"Por favor completa todos los campos"
+  },
+  en: {
+    recipient:"Recipient",
+    address:"Address",
+    city:"City",
+    postal:"Postal Code",
+    country:"Country",
+    contact:"Phone/Email",
+    generateBtn:"Generate Label",
+    copyBtn:"Copy Data",
+    copyAlert:"Data copied to clipboard",
+    invalid:"Please fill all fields"
+  }
+};
+
+function updateLanguage(lang){
+  const t = translations[lang];
+  recipientLabel.textContent = t.recipient;
+  addressLabel.textContent = t.address;
+  cityLabel.textContent = t.city;
+  postalLabel.textContent = t.postal;
+  countryLabel.textContent = t.country;
+  contactLabel.textContent = t.contact;
+  generateBtn.textContent = t.generateBtn;
+  copyBtn.textContent = t.copyBtn;
+}
+langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
+updateLanguage('es');
+
+function showToast(message){
+  toast.textContent = message;
+  toast.style.display='block';
+  toast.style.opacity=1;
+  setTimeout(()=>{toast.style.opacity=0;},2000);
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
+function generateLabel(){
+  const recipient = recipientInput.value.trim();
+  const address = addressInput.value.trim();
+  const city = cityInput.value.trim();
+  const postal = postalInput.value.trim();
+  const country = countryInput.value.trim();
+  const contact = contactInput.value.trim();
+  const lang = langSelect.value;
+  const t = translations[lang];
+
+  if(!recipient || !address || !city || !postal || !country || !contact){
+    showToast(t.invalid);
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:[100,150]});
+
+  const leftMargin = 10;
+  let y = 15;
+
+  // Bloque de información con fondo gris claro
+  doc.setFillColor(245,245,245);
+  doc.roundedRect(5,10,90,70,3,3,'F');
+
+  // Tipografía jerárquica
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(14);
+  doc.text(`${recipient}`, leftMargin, y); y+=10;
+
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(11);
+  doc.text(`${t.address}: ${address}`, leftMargin, y); y+=7;
+  doc.text(`${t.city}: ${city}`, leftMargin, y); y+=7;
+  doc.text(`${t.postal}: ${postal}`, leftMargin, y); y+=7;
+  doc.text(`${t.country}: ${country}`, leftMargin, y); y+=7;
+  doc.text(`${t.contact}: ${contact}`, leftMargin, y);
+
+  // Separador suave
+  doc.setLineWidth(0.3);
+  doc.line(5,85,95,85);
+
+  // QR abajo
+  const qrData = `Recipient: ${recipient}\nAddress: ${address}\nCity: ${city}\nPostal: ${postal}\nCountry: ${country}\nContact: ${contact}`;
+  const qrDiv = document.createElement("div");
+  const qr = new QRCode(qrDiv, {text: qrData, width:200, height:200});
+  const qrCanvas = qr._oDrawing._elCanvas;
+  const qrImgData = qrCanvas.toDataURL("image/png");
+
+  doc.addImage(qrImgData,'PNG', 25, 95, 50, 50);
+  doc.setFontSize(8);
+  doc.setFont("helvetica","normal");
+  doc.text("Escanear / Scan me", 50, 150, {align:'center'});
+
+  doc.save(`${recipient}_label.pdf`);
+}
+
+function copyData(){
+  const recipient = recipientInput.value.trim();
+  const address = addressInput.value.trim();
+  const city = cityInput.value.trim();
+  const postal = postalInput.value.trim();
+  const country = countryInput.value.trim();
+  const contact = contactInput.value.trim();
+  const lang = langSelect.value;
+  const t = translations[lang];
+
+  if(!recipient || !address || !city || !postal || !country || !contact){
+    showToast(t.invalid);
+    return;
+  }
+
+  const text = `${t.recipient}: ${recipient}\n${t.address}: ${address}\n${t.city}: ${city}\n${t.postal}: ${postal}\n${t.country}: ${country}\n${t.contact}: ${contact}`;
+  navigator.clipboard.writeText(text).then(()=>showToast(t.copyAlert));
+}
+
+generateBtn.addEventListener('click', generateLabel);
+copyBtn.addEventListener('click', copyData);
+</script>
+
+</body>
+</html>

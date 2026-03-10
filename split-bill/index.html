@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SplitBill | Reparto de cuentas</title>
+<style>
+* {box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body {background:#f0f2f5; display:flex; justify-content:center; padding:20px;}
+.container {background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:550px; width:100%; margin-top:30px;}
+h1 {text-align:center; margin-bottom:20px; color:#333;}
+label {display:block; margin-top:15px; font-weight:600; color:#555;}
+input[type="text"], input[type="number"], select {width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px;}
+textarea {resize:vertical; min-height:60px; margin-top:5px; border:1px solid #ccc; border-radius:8px; padding:10px;}
+.button-group {display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px;}
+button {flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s ease;}
+button:hover {background-color:#45a049;}
+.result {background:#f9f9f9; padding:15px; border-radius:8px; margin-top:20px; border:1px solid #ddd; white-space:pre-wrap;}
+#toast {position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>SplitBill</h1>
+
+  <label for="langSelect">Idioma / Language:</label>
+  <select id="langSelect">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <label for="totalAmount" id="totalLabel">Total de la cuenta:</label>
+  <input type="number" id="totalAmount" min="0" value="0">
+
+  <label for="tip" id="tipLabel">Propina (%) opcional:</label>
+  <input type="number" id="tip" min="0" value="0">
+
+  <label for="people" id="peopleLabel">Personas (separadas por coma):</label>
+  <input type="text" id="people" placeholder="Ej: Juan, María, Pedro">
+
+  <div class="button-group">
+    <button id="calculateBtn">Calcular</button>
+    <button id="copyBtn">Copiar resultado</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const langSelect = document.getElementById('langSelect');
+const totalAmountInput = document.getElementById('totalAmount');
+const tipInput = document.getElementById('tip');
+const peopleInput = document.getElementById('people');
+const calculateBtn = document.getElementById('calculateBtn');
+const copyBtn = document.getElementById('copyBtn');
+const resultDiv = document.getElementById('result');
+const toast = document.getElementById('toast');
+
+const totalLabel = document.getElementById('totalLabel');
+const tipLabel = document.getElementById('tipLabel');
+const peopleLabel = document.getElementById('peopleLabel');
+
+const translations = {
+  es:{
+    title:"SplitBill",
+    total:"Total de la cuenta:",
+    tip:"Propina (%) opcional:",
+    people:"Personas (separadas por coma):",
+    calculateBtn:"Calcular",
+    copyBtn:"Copiar resultado",
+    enterTotal:"Ingresa un total válido",
+    enterPeople:"Ingresa al menos una persona",
+    enterValidPerson:"Ingresa al menos una persona válida",
+    totalWithTip:"Total con propina",
+    copied:"Resultado copiado"
+  },
+  en:{
+    title:"SplitBill",
+    total:"Total amount:",
+    tip:"Tip (%) optional:",
+    people:"People (comma separated):",
+    calculateBtn:"Calculate",
+    copyBtn:"Copy result",
+    enterTotal:"Enter valid total",
+    enterPeople:"Enter at least one person",
+    enterValidPerson:"Enter at least one valid person",
+    totalWithTip:"Total with tip",
+    copied:"Copied!"
+  }
+};
+
+function updateLanguage(lang){
+  const t = translations[lang];
+  totalLabel.textContent=t.total;
+  tipLabel.textContent=t.tip;
+  peopleLabel.textContent=t.people;
+  calculateBtn.textContent=t.calculateBtn;
+  copyBtn.textContent=t.copyBtn;
+}
+langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
+updateLanguage('es');
+
+function showToast(message){
+  toast.textContent = message;
+  toast.style.display='block';
+  toast.style.opacity=1;
+  setTimeout(()=>{toast.style.opacity=0;},2000);
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
+function calculateSplit(){
+  const lang = langSelect.value;
+  const t = translations[lang];
+
+  const total = parseFloat(totalAmountInput.value);
+  const tipPercent = parseFloat(tipInput.value);
+  const peopleRaw = peopleInput.value.trim();
+
+  if(isNaN(total) || total < 0){
+    showToast(t.enterTotal);
+    return;
+  }
+  if(!peopleRaw){
+    showToast(t.enterPeople);
+    return;
+  }
+
+  const people = peopleRaw.split(',').map(p=>p.trim()).filter(p=>p.length>0);
+  if(people.length === 0){
+    showToast(t.enterValidPerson);
+    return;
+  }
+
+  const totalWithTip = total * (1 + (tipPercent || 0)/100);
+  const perPerson = totalWithTip / people.length;
+
+  let output = `${t.totalWithTip}: $${totalWithTip.toFixed(2)}\n\n`;
+  people.forEach(p => {
+    output += `${p}: $${perPerson.toFixed(2)}\n`;
+  });
+
+  resultDiv.textContent = output;
+}
+
+function copyResult(){
+  const lang = langSelect.value;
+  const t = translations[lang];
+  const text = resultDiv.textContent;
+  if(!text){
+    showToast(t.enterPeople);
+    return;
+  }
+  navigator.clipboard.writeText(text).then(()=>showToast(t.copied));
+}
+
+calculateBtn.addEventListener('click', calculateSplit);
+copyBtn.addEventListener('click', copyResult);
+</script>
+
+</body>
+</html>
