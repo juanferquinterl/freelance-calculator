@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,25 @@ body{
 }
 h1{
   text-align:center;
-  margin-bottom:40px;
+  margin-bottom:20px;
+}
+#langContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 10px;
+  background: #fff;
+  padding: 8px 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+#langSelect {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  cursor: pointer;
 }
 .tools-container{
   display:flex;
@@ -61,61 +79,99 @@ h1{
 </head>
 <body>
 
-<h1>My Web Tools</h1>
+<h1 id="mainTitle">My Web Tools</h1>
+<div id="langContainer">
+  <label for="langSelect">Language / Idioma:</label>
+  <select id="langSelect">
+    <option value="en">English</option>
+    <option value="es">Español</option>
+  </select>
+</div>
 
 <div class="tools-container">
-  <!-- Freelance Rate Calculator -->
   <a class="tool-card" href="./freelance-rate-calculator/index.html">
-    <div class="tool-title">Freelance Rate Calculator</div>
-    <div class="tool-desc">Calculate your ideal hourly rate as a freelancer.</div>
+    <div class="tool-title" data-en="Freelance Rate Calculator" data-es="Calculadora de tarifa freelance">Freelance Rate Calculator</div>
+    <div class="tool-desc" data-en="Calculate your ideal hourly rate as a freelancer." data-es="Calcula tu tarifa ideal como freelancer.">Calculate your ideal hourly rate as a freelancer.</div>
   </a>
   
-  <!-- Password Generator -->
   <a class="tool-card" href="./password-generator/index.html">
-    <div class="tool-title">Password Generator</div>
-    <div class="tool-desc">Generate strong passwords with options for length, symbols, numbers, and uppercase letters.</div>
+    <div class="tool-title" data-en="Password Generator" data-es="Generador de contraseñas">Password Generator</div>
+    <div class="tool-desc" data-en="Generate strong passwords with options for length, symbols, numbers, and uppercase letters." data-es="Genera contraseñas seguras con longitud, símbolos, números y mayúsculas.">Generate strong passwords with options for length, symbols, numbers, and uppercase letters.</div>
   </a>
 
-  <!-- QR Code Generator -->
   <a class="tool-card" href="./qr-generator/index.html">
-    <div class="tool-title">QR Code Generator</div>
-    <div class="tool-desc">Instantly create QR codes for URLs or text and download as PNG.</div>
+    <div class="tool-title" data-en="QR Code Generator" data-es="Generador de códigos QR">QR Code Generator</div>
+    <div class="tool-desc" data-en="Instantly create QR codes for URLs or text and download as PNG." data-es="Crea códigos QR instantáneos para URLs o texto y descárgalos como PNG.">Instantly create QR codes for URLs or text and download as PNG.</div>
   </a>
 
-  <!-- WebP2PNG -->
   <a class="tool-card" href="./webp2png/index.html">
-    <div class="tool-title">WebP2PNG</div>
-    <div class="tool-desc">Convert WebP images to PNG quickly and download directly in your browser.</div>
+    <div class="tool-title" data-en="WebP2PNG" data-es="WebP2PNG">WebP2PNG</div>
+    <div class="tool-desc" data-en="Convert WebP images to PNG quickly and download directly in your browser." data-es="Convierte imágenes WebP a PNG rápidamente y descárgalas desde tu navegador.">Convert WebP images to PNG quickly and download directly in your browser.</div>
   </a>
 
-  <!-- FastInvoice -->
   <a class="tool-card" href="./fast-invoice/index.html">
-    <div class="tool-title">FastInvoice</div>
-    <div class="tool-desc">Genera facturas profesionales en PDF con IVA opcional y firmas.</div>
+    <div class="tool-title" data-en="FastInvoice" data-es="FastInvoice">FastInvoice</div>
+    <div class="tool-desc" data-en="Generate professional PDF invoices with optional tax and signatures." data-es="Genera facturas profesionales en PDF con IVA opcional y firmas.">Generate professional PDF invoices with optional tax and signatures.</div>
   </a>
   
-  <!-- SKU Generator -->
   <a class="tool-card" href="./sku-generator/index.html">
-    <div class="tool-title">SKU Generator</div>
-    <div class="tool-desc">Genera códigos SKU únicos para tus productos de forma rápida y profesional.</div>
+    <div class="tool-title" data-en="SKU Generator" data-es="Generador de SKU">SKU Generator</div>
+    <div class="tool-desc" data-en="Generate unique SKU codes for your products quickly and professionally." data-es="Genera códigos SKU únicos para tus productos de forma rápida y profesional.">Generate unique SKU codes for your products quickly and professionally.</div>
   </a>
 
-  <!-- ShippingLabel -->
   <a class="tool-card" href="./shipping-label/index.html">
-    <div class="tool-title">ShippingLabel</div>
-    <div class="tool-desc">Genera etiquetas de envío profesionales con QR y datos listos para imprimir.</div>
+    <div class="tool-title" data-en="ShippingLabel" data-es="Etiqueta de envío">ShippingLabel</div>
+    <div class="tool-desc" data-en="Generate professional shipping labels with QR and contact info ready to print." data-es="Genera etiquetas de envío profesionales con QR y datos listos para imprimir.">Generate professional shipping labels with QR and contact info ready to print.</div>
   </a>
 
-  <!-- Split-Bill -->
   <a class="tool-card" href="./split-bill/index.html">
-    <div class="tool-title">Split-Bill</div>
-    <div class="tool-desc">Calcula y reparte cuentas fácilmente entre amigos con propinas incluidas.</div>
+    <div class="tool-title" data-en="Split-Bill" data-es="Repartir cuentas">Split-Bill</div>
+    <div class="tool-desc" data-en="Easily calculate and split bills among friends including tips." data-es="Calcula y reparte cuentas fácilmente entre amigos con propinas incluidas.">Easily calculate and split bills among friends including tips.</div>
   </a>
+
+  <a class="tool-card" href="./quick-barcode/index.html">
+    <div class="tool-title" data-en="QuickBarcode" data-es="QuickBarcode">QuickBarcode</div>
+    <div class="tool-desc" data-en="Generate professional barcodes in PNG or PDF ready to print." data-es="Genera códigos de barras profesionales en PNG o PDF listos para imprimir.">Generate professional barcodes in PNG or PDF ready to print.</div>
+  </a>
+
+  <a class="tool-card" href="./unit-converter/index.html">
+    <div class="tool-title" data-en="Unit Converter" data-es="Conversor de unidades">Unit Converter</div>
+    <div class="tool-desc" data-en="Convert units quickly and accurately: length, weight, volume, temperature, and more." data-es="Convierte unidades de forma rápida y precisa: longitud, peso, volumen, temperatura y más.">Convert units quickly and accurately: length, weight, volume, temperature, and more.</div>
+  </a>
+
+  <a class="tool-card" href="./color-palette-generator/index.html">
+    <div class="tool-title" data-en="Color Palette Generator" data-es="Generador de paletas de colores">Color Palette Generator</div>
+    <div class="tool-desc" data-en="Generate harmonious color palettes for web or graphic design with preview and HEX codes." data-es="Genera paletas de colores armónicas para diseño web o gráfico con vista previa y códigos HEX.">Generate harmonious color palettes for web or graphic design with preview and HEX codes.</div>
+  </a>
+
+  <a class="tool-card" href="./quick-list/index.html">
+    <div class="tool-title" data-en="Quick List" data-es="Lista rápida">Quick List</div>
+    <div class="tool-desc" data-en="Create quick lists and download PDF with professional style for checking items." data-es="Crea listas rápidas y descárgalas en PDF con estilo profesional para ir tildando items.">Create quick lists and download PDF with professional style for checking items.</div>
+  </a>
+
+  <a class="tool-card" href="./money-plan/index.html">
+    <div class="tool-title" data-en="Money-Plan" data-es="Money-Plan">Money-Plan</div>
+    <div class="tool-desc" data-en="Calculate your ideal freelance rate and plan your finances easily." data-es="Calcula tu tarifa ideal como freelancer y planifica tus finanzas fácilmente.">Calculate your ideal freelance rate and plan your finances easily.</div>
+  </a>
+
 </div>
 
-<div class="footer">
-&copy; 2026 JuanFerQuinterl | Free web tools
-</div>
+<div class="footer" id="footerText">&copy; 2026 JuanFerQuinterl | Free web tools</div>
+
+<script>
+const langSelect = document.getElementById('langSelect');
+langSelect.addEventListener('change', ()=>{
+  const lang = langSelect.value;
+  document.querySelectorAll('.tool-title').forEach(el=>{
+    el.textContent = el.dataset[lang];
+  });
+  document.querySelectorAll('.tool-desc').forEach(el=>{
+    el.textContent = el.dataset[lang];
+  });
+  document.getElementById('mainTitle').textContent = lang === "en" ? "My Web Tools" : "Mis herramientas web";
+  document.getElementById('footerText').textContent = lang === "en" ? "© 2026 JuanFerQuinterl | Free web tools" : "© 2026 JuanFerQuinterl | Herramientas web gratis";
+});
+</script>
 
 </body>
 </html>
