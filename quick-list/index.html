@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuickList | Generador de Listas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+* {box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body {background:#f0f2f5; display:flex; justify-content:center; padding:20px;}
+.container {background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; margin-top:30px;}
+h1 {text-align:center; margin-bottom:20px; color:#333;}
+label {display:block; margin-top:10px; font-weight:600; color:#555;}
+textarea, select, input[type="text"] {width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px; resize:vertical;}
+.button-group {display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px;}
+button {flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s;}
+button:hover {background-color:#45a049;}
+.result {margin-top:20px; font-size:16px; color:#333; white-space:pre-wrap;}
+#toast {position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>QuickList</h1>
+
+  <label for="langSelect">Idioma / Language:</label>
+  <select id="langSelect">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <label id="titleLabel" for="title">Título de la lista:</label>
+  <input type="text" id="title" placeholder="Mi lista">
+
+  <label id="itemsLabel" for="items">Ingresa tus ítems:</label>
+  <textarea id="items" rows="6" placeholder="Ej: Leche, Pan, Huevos"></textarea>
+
+  <label id="styleLabel" for="style">Estilo de lista:</label>
+  <select id="style">
+    <option value="bullet">Viñetas</option>
+    <option value="number">Numerada</option>
+  </select>
+
+  <div class="button-group">
+    <button id="generateBtn">Generar lista</button>
+    <button id="copyBtn">Copiar</button>
+    <button id="pdfBtn">Descargar PDF</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+const langSelect = document.getElementById('langSelect');
+const titleInput = document.getElementById('title');
+const itemsInput = document.getElementById('items');
+const styleSelect = document.getElementById('style');
+const generateBtn = document.getElementById('generateBtn');
+const copyBtn = document.getElementById('copyBtn');
+const pdfBtn = document.getElementById('pdfBtn');
+const resultDiv = document.getElementById('result');
+const toast = document.getElementById('toast');
+
+const titleLabel = document.getElementById('titleLabel');
+const itemsLabel = document.getElementById('itemsLabel');
+const styleLabel = document.getElementById('styleLabel');
+
+const translations = {
+  es:{
+    title:"Título de la lista",
+    items:"Ingresa tus ítems",
+    style:"Estilo de lista",
+    generateBtn:"Generar lista",
+    copyBtn:"Copiar",
+    pdfBtn:"Descargar PDF",
+    copyAlert:"Lista copiada al portapapeles",
+    invalid:"Por favor ingresa al menos un ítem",
+    placeholder:"Ej: Leche, Pan, Huevos",
+    bullet:"Viñetas",
+    number:"Numerada"
+  },
+  en:{
+    title:"List title",
+    items:"Enter your items",
+    style:"List style",
+    generateBtn:"Generate List",
+    copyBtn:"Copy",
+    pdfBtn:"Download PDF",
+    copyAlert:"List copied to clipboard",
+    invalid:"Please enter at least one item",
+    placeholder:"Ex: Milk, Bread, Eggs",
+    bullet:"Bullets",
+    number:"Numbered"
+  }
+};
+
+function updateLanguage(lang){
+  const t = translations[lang];
+  titleLabel.textContent = t.title;
+  itemsLabel.textContent = t.items;
+  styleLabel.textContent = t.style;
+  generateBtn.textContent = t.generateBtn;
+  copyBtn.textContent = t.copyBtn;
+  pdfBtn.textContent = t.pdfBtn;
+  titleInput.placeholder = t.placeholder;
+  itemsInput.placeholder = t.placeholder;
+
+  // actualizar opciones del select estilo
+  styleSelect.options[0].text = t.bullet;
+  styleSelect.options[1].text = t.number;
+}
+langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
+updateLanguage('es');
+
+function showToast(message){
+  toast.textContent=message;
+  toast.style.display='block';
+  toast.style.opacity=1;
+  setTimeout(()=>{toast.style.opacity=0;},2000);
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
+function generateList(){
+  const raw = itemsInput.value.trim();
+  if(!raw){ showToast(translations[langSelect.value].invalid); return; }
+  const items = raw.split(/\n|,/).map(i=>i.trim()).filter(i=>i);
+  const style = styleSelect.value;
+  let listText = "";
+  if(style==="bullet"){
+    items.forEach(i=>{ listText+="• "+i+"\n"; });
+  } else {
+    items.forEach((i,index)=>{ listText+=`${index+1}. ${i}\n`; });
+  }
+  resultDiv.textContent = listText.trim();
+}
+
+function copyList(){
+  const text = resultDiv.textContent;
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>showToast(translations[langSelect.value].copyAlert));
+}
+
+function downloadPDF(){
+  const raw = itemsInput.value.trim();
+  if(!raw){ showToast(translations[langSelect.value].invalid); return; }
+  const items = raw.split(/\n|,/).map(i=>i.trim()).filter(i=>i);
+  const title = titleInput.value.trim() || translations[langSelect.value].title;
+  
+  const doc = new jsPDF();
+  doc.setFontSize(22);
+  doc.setTextColor(40,40,40);
+  doc.text(title,105,20,null,null,"center");
+
+  // línea debajo del título
+  doc.setDrawColor(100,100,100);
+  doc.setLineWidth(0.5);
+  doc.line(20,28,190,28);
+
+  doc.setFontSize(14);
+  let y = 40;
+  items.forEach((item,index)=>{
+    if(y>280){ doc.addPage(); y=20; } 
+    if(index%2===0){ doc.setFillColor(245,245,245); doc.rect(10,y-6,190,10,'F'); }
+    doc.setDrawColor(0);
+    doc.circle(15, y, 3);
+    doc.text(item, 25, y+2);
+    y+=10;
+  });
+
+  doc.save(title+".pdf");
+}
+
+generateBtn.addEventListener('click', generateList);
+copyBtn.addEventListener('click', copyList);
+pdfBtn.addEventListener('click', downloadPDF);
+</script>
+
+</body>
+</html>

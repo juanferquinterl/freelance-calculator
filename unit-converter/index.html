@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UnitConverter | Conversor de Unidades</title>
+<style>
+* {box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body {background:#f0f2f5; display:flex; justify-content:center; padding:20px;}
+.container {background:#fff; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); max-width:500px; width:100%; margin-top:30px;}
+h1 {text-align:center; margin-bottom:20px; color:#333;}
+label {display:block; margin-top:10px; font-weight:600; color:#555;}
+input[type="number"], select {width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:8px; font-size:16px;}
+.button-group {display:flex; justify-content:space-between; margin-top:15px; flex-wrap:wrap; gap:10px;}
+button {flex:1; min-width:48%; padding:12px; background-color:#4CAF50; color:white; font-size:16px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:background 0.3s;}
+button:hover {background-color:#45a049;}
+.result {margin-top:20px; font-size:16px; font-weight:bold; color:#333;}
+#toast {position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background:#4CAF50; color:white; padding:12px 20px; border-radius:8px; display:none; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0; transition:opacity 0.5s; z-index:1000;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>UnitConverter</h1>
+
+  <label for="langSelect">Idioma / Language:</label>
+  <select id="langSelect">
+    <option value="es">Español</option>
+    <option value="en">English</option>
+  </select>
+
+  <label id="typeLabel">Tipo / Type:</label>
+  <select id="type">
+    <option value="length">Longitud / Length</option>
+    <option value="weight">Peso / Weight</option>
+    <option value="temperature">Temperatura / Temperature</option>
+    <option value="volume">Volumen / Volume</option>
+  </select>
+
+  <label id="fromLabel">De / From:</label>
+  <select id="fromUnit"></select>
+
+  <label id="toLabel">A / To:</label>
+  <select id="toUnit"></select>
+
+  <label id="valueLabel">Valor / Value:</label>
+  <input type="number" id="value" placeholder="Ej: 10">
+
+  <div class="button-group">
+    <button id="convertBtn">Convertir / Convert</button>
+    <button id="copyBtn">Copiar resultado / Copy result</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const langSelect = document.getElementById('langSelect');
+const typeSelect = document.getElementById('type');
+const fromSelect = document.getElementById('fromUnit');
+const toSelect = document.getElementById('toUnit');
+const valueInput = document.getElementById('value');
+const convertBtn = document.getElementById('convertBtn');
+const copyBtn = document.getElementById('copyBtn');
+const resultDiv = document.getElementById('result');
+const toast = document.getElementById('toast');
+
+const typeLabel = document.getElementById('typeLabel');
+const fromLabel = document.getElementById('fromLabel');
+const toLabel = document.getElementById('toLabel');
+const valueLabel = document.getElementById('valueLabel');
+
+const translations = {
+  es: {
+    type:"Tipo",
+    from:"De",
+    to:"A",
+    value:"Valor",
+    convertBtn:"Convertir",
+    copyBtn:"Copiar resultado",
+    copyAlert:"Resultado copiado al portapapeles",
+    invalid:"Por favor ingresa un valor"
+  },
+  en: {
+    type:"Type",
+    from:"From",
+    to:"To",
+    value:"Value",
+    convertBtn:"Convert",
+    copyBtn:"Copy result",
+    copyAlert:"Result copied to clipboard",
+    invalid:"Please enter a value"
+  }
+};
+
+function updateLanguage(lang){
+  const t = translations[lang];
+  typeLabel.textContent = t.type;
+  fromLabel.textContent = t.from;
+  toLabel.textContent = t.to;
+  valueLabel.textContent = t.value;
+  convertBtn.textContent = t.convertBtn;
+  copyBtn.textContent = t.copyBtn;
+}
+
+langSelect.addEventListener('change',()=>updateLanguage(langSelect.value));
+updateLanguage('es');
+
+// Unidades
+const units = {
+  length: {m:1, km:1000, cm:0.01, mm:0.001, in:0.0254, ft:0.3048, yd:0.9144, mi:1609.34},
+  weight: {g:1, kg:1000, lb:453.592, oz:28.3495},
+  temperature: ["C","F","K"],
+  volume: {ml:1, l:1000, m3:1000000, floz:29.5735, cup:240, pint:473.176, gal:3785.41}
+};
+
+function populateUnits(){
+  const type = typeSelect.value;
+  fromSelect.innerHTML = "";
+  toSelect.innerHTML = "";
+  if(type==="temperature"){
+    units.temperature.forEach(u=>{
+      const opt1=document.createElement("option"); opt1.value=u; opt1.textContent=u; fromSelect.appendChild(opt1);
+      const opt2=document.createElement("option"); opt2.value=u; opt2.textContent=u; toSelect.appendChild(opt2);
+    });
+  }else{
+    Object.keys(units[type]).forEach(u=>{
+      const opt1=document.createElement("option"); opt1.value=u; opt1.textContent=u; fromSelect.appendChild(opt1);
+      const opt2=document.createElement("option"); opt2.value=u; opt2.textContent=u; toSelect.appendChild(opt2);
+    });
+  }
+}
+typeSelect.addEventListener('change',populateUnits);
+populateUnits();
+
+function showToast(message){
+  toast.textContent=message;
+  toast.style.display='block';
+  toast.style.opacity=1;
+  setTimeout(()=>{toast.style.opacity=0;},2000);
+  setTimeout(()=>{toast.style.display='none';},2500);
+}
+
+function convert(){
+  const type = typeSelect.value;
+  const from = fromSelect.value;
+  const to = toSelect.value;
+  let value = parseFloat(valueInput.value);
+  const lang = langSelect.value;
+  const t = translations[lang];
+
+  if(isNaN(value)){ showToast(t.invalid); return; }
+
+  let result;
+  if(type==="temperature"){
+    // Convertir primero a Celsius
+    if(from==="C") result=value;
+    else if(from==="F") result=(value-32)*5/9;
+    else if(from==="K") result=value-273.15;
+
+    // Convertir de Celsius a destino
+    if(to==="C") result=result;
+    else if(to==="F") result=result*9/5+32;
+    else if(to==="K") result=result+273.15;
+  } else {
+    // Convertir a base
+    result = value*units[type][from];
+    result = result/units[type][to];
+  }
+
+  resultDiv.textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+}
+
+function copyResult(){
+  const text = resultDiv.textContent;
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>showToast(translations[langSelect.value].copyAlert));
+}
+
+convertBtn.addEventListener('click',convert);
+copyBtn.addEventListener('click',copyResult);
+</script>
+
+</body>
+</html>
