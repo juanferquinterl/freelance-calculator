@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>JPG2PDF | My Web Tools</title>
+<meta name="description" content="Convert JPG images to PDF quickly in your browser. Free online converter.">
+
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+body{
+background:#f4f6f8;
+display:flex;
+justify-content:center;
+align-items:flex-start;
+min-height:100vh;
+padding:40px 20px;
+}
+
+.container{
+background:white;
+padding:40px 35px;
+border-radius:12px;
+box-shadow:0 15px 40px rgba(0,0,0,0.1);
+width:400px;
+max-width:100%;
+text-align:center;
+}
+
+h1{
+margin-bottom:25px;
+color:#333;
+}
+
+input[type=file],select,button{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+font-size:16px;
+}
+
+input[type=file]:focus,select:focus{
+outline:none;
+border-color:#4CAF50;
+box-shadow:0 0 5px rgba(76,175,80,0.3);
+}
+
+button{
+background:#4CAF50;
+color:white;
+border:none;
+cursor:pointer;
+font-weight:bold;
+margin-top:15px;
+transition:0.3s;
+}
+
+button:hover{
+background:#43a047;
+}
+
+#downloadLink{
+display:none;
+margin-top:10px;
+background:#2196F3;
+color:white;
+padding:12px;
+border-radius:8px;
+text-decoration:none;
+display:inline-block;
+transition:0.3s;
+}
+
+#downloadLink:hover{
+background:#1e88e5;
+}
+
+.language-select{
+text-align:right;
+margin-bottom:20px;
+}
+
+.footer{
+text-align:center;
+margin-top:25px;
+font-size:12px;
+color:#777;
+}
+
+#toast{
+position:fixed;
+bottom:25px;
+left:50%;
+transform:translateX(-50%);
+background:#333;
+color:white;
+padding:12px 20px;
+border-radius:8px;
+font-size:14px;
+opacity:0;
+pointer-events:none;
+transition:opacity .4s,transform .4s;
+z-index:1000;
+}
+
+#toast.show{
+opacity:1;
+transform:translate(-50%,-10px);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="language-select">
+<select id="language" onchange="setLanguage()">
+<option value="en">English</option>
+<option value="es">Español</option>
+</select>
+</div>
+
+<h1 id="title">JPG2PDF</h1>
+
+<label id="labelFile">Select JPG images</label> <input type="file" id="imageFiles" accept="image/jpeg,image/png" multiple>
+
+<label id="layoutLabel">Images per page</label> <select id="imagesPerPage">
+
+<option value="1" id="layout1">1 image per page</option>
+<option value="2" id="layout2">2 images per page</option>
+<option value="4" id="layout4">4 images per page</option>
+</select>
+
+<label id="pageSizeLabel">Page size</label> <select id="pageSize">
+
+<option value="a4" id="sizeA4">A4</option>
+<option value="letter" id="sizeLetter">Letter</option>
+</select>
+
+<label id="orientationLabel">Orientation</label> <select id="orientation">
+
+<option value="portrait" id="portraitText">Portrait</option>
+<option value="landscape" id="landscapeText">Landscape</option>
+</select>
+
+<label id="marginLabel">Margins</label> <select id="margin">
+
+<option value="0" id="marginNone">No margin</option>
+<option value="10" id="marginSmall">Small margin</option>
+<option value="20" id="marginNormal">Normal margin</option>
+</select>
+
+<label>
+<input type="checkbox" id="sortImages">
+<span id="sortLabel">Sort images by filename</span>
+</label>
+
+<button id="convertButton" onclick="generatePDF()">Generate PDF</button>
+
+<a id="downloadLink">Download PDF</a>
+
+<div class="footer" id="footerText">
+Convert JPG images to PDF quickly in your browser
+</div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+
+let lang="en"
+
+function showToast(message){
+
+const toast=document.getElementById("toast")
+
+toast.innerText=message
+
+toast.classList.add("show")
+
+setTimeout(()=>{
+toast.classList.remove("show")
+},2000)
+
+}
+
+function setLanguage(){
+
+lang=document.getElementById("language").value
+
+localStorage.setItem("lang",lang)
+
+if(lang==="es"){
+
+title.innerText="JPG2PDF"
+labelFile.innerText="Selecciona imágenes JPG"
+convertButton.innerText="Generar PDF"
+downloadLink.innerText="Descargar PDF"
+footerText.innerText="Convierte imágenes JPG a PDF rápidamente en tu navegador"
+
+layoutLabel.innerText="Imágenes por página"
+layout1.innerText="1 imagen por página"
+layout2.innerText="2 imágenes por página"
+layout4.innerText="4 imágenes por página"
+
+pageSizeLabel.innerText="Tamaño de página"
+sizeLetter.innerText="Carta"
+
+orientationLabel.innerText="Orientación"
+portraitText.innerText="Vertical"
+landscapeText.innerText="Horizontal"
+
+marginLabel.innerText="Márgenes"
+marginNone.innerText="Sin margen"
+marginSmall.innerText="Margen pequeño"
+marginNormal.innerText="Margen normal"
+
+sortLabel.innerText="Ordenar imágenes por nombre"
+
+}else{
+
+title.innerText="JPG2PDF"
+labelFile.innerText="Select JPG images"
+convertButton.innerText="Generate PDF"
+downloadLink.innerText="Download PDF"
+footerText.innerText="Convert JPG images to PDF quickly in your browser"
+
+layoutLabel.innerText="Images per page"
+layout1.innerText="1 image per page"
+layout2.innerText="2 images per page"
+layout4.innerText="4 images per page"
+
+pageSizeLabel.innerText="Page size"
+sizeLetter.innerText="Letter"
+
+orientationLabel.innerText="Orientation"
+portraitText.innerText="Portrait"
+landscapeText.innerText="Landscape"
+
+marginLabel.innerText="Margins"
+marginNone.innerText="No margin"
+marginSmall.innerText="Small margin"
+marginNormal.innerText="Normal margin"
+
+sortLabel.innerText="Sort images by filename"
+
+}
+
+}
+
+async function generatePDF(){
+
+let files=[...document.getElementById("imageFiles").files]
+
+if(!files.length){
+
+showToast(lang==="es"?"Selecciona imágenes":"Select images first")
+
+return
+
+}
+
+if(document.getElementById("sortImages").checked){
+
+files.sort((a,b)=>a.name.localeCompare(b.name))
+
+}
+
+const imagesPerPage=parseInt(document.getElementById("imagesPerPage").value)
+
+const orientation=document.getElementById("orientation").value
+
+const pageSize=document.getElementById("pageSize").value
+
+const margin=parseInt(document.getElementById("margin").value)
+
+let format=pageSize==="letter"?"letter":"a4"
+
+const { jsPDF }=window.jspdf
+
+const pdf=new jsPDF({
+orientation:orientation,
+unit:"mm",
+format:format
+})
+
+const pageWidth=pdf.internal.pageSize.getWidth()
+
+const pageHeight=pdf.internal.pageSize.getHeight()
+
+let positions=[]
+
+if(imagesPerPage===1){
+
+positions=[[margin,margin,pageWidth-margin*2,pageHeight-margin*2]]
+
+}
+
+if(imagesPerPage===2){
+
+positions=[
+[margin,margin,pageWidth-margin*2,(pageHeight/2)-margin],
+[margin,(pageHeight/2),pageWidth-margin*2,(pageHeight/2)-margin]
+]
+
+}
+
+if(imagesPerPage===4){
+
+positions=[
+[margin,margin,(pageWidth/2)-margin,(pageHeight/2)-margin],
+[(pageWidth/2),margin,(pageWidth/2)-margin,(pageHeight/2)-margin],
+[margin,(pageHeight/2),(pageWidth/2)-margin,(pageHeight/2)-margin],
+[(pageWidth/2),(pageHeight/2),(pageWidth/2)-margin,(pageHeight/2)-margin]
+]
+
+}
+
+let posIndex=0
+
+for(let i=0;i<files.length;i++){
+
+const reader=new FileReader()
+
+await new Promise(resolve=>{
+
+reader.onload=function(e){
+
+const img=new Image()
+
+img.onload=function(){
+
+const pos=positions[posIndex]
+
+pdf.addImage(img,"JPEG",pos[0],pos[1],pos[2],pos[3])
+
+posIndex++
+
+if(posIndex===imagesPerPage && i<files.length-1){
+
+pdf.addPage()
+
+posIndex=0
+
+}
+
+resolve()
+
+}
+
+img.src=e.target.result
+
+}
+
+reader.readAsDataURL(files[i])
+
+})
+
+}
+
+const blob=pdf.output("blob")
+
+const url=URL.createObjectURL(blob)
+
+downloadLink.href=url
+
+downloadLink.download="images.pdf"
+
+downloadLink.style.display="inline-block"
+
+showToast(lang==="es"?"PDF listo":"PDF ready")
+
+}
+
+window.onload=()=>{
+
+const savedLang=localStorage.getItem("lang")
+
+if(savedLang){
+
+language.value=savedLang
+
+}
+
+setLanguage()
+
+}
+
+</script>
+
+</body>
+</html>
